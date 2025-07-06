@@ -168,7 +168,7 @@ const AdminPanel = () => {
                 <p className="text-lg font-bold text-white">{systemStats.totalRoasts.toLocaleString()}</p>
               </div>
             </div>
-          </div>
+          </Card>
 
           <Card className="bg-gradient-to-r from-yellow-900/50 to-yellow-800/50 border border-yellow-500/30 p-4">
             <div className="flex items-center">
