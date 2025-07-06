@@ -1,15 +1,21 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Share, Download, Settings } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Flame, Share, Download, Settings, Sparkles } from "lucide-react";
 import RoastCard from "./RoastCard";
 import { useAdManager } from "@/hooks/useAdManager";
+import { aiRoastService, RoastRequest } from "@/services/aiService";
 
 const RoastGenerator: React.FC = () => {
   const [selectedStyle, setSelectedStyle] = useState('classic');
   const [currentRoast, setCurrentRoast] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [userBio, setUserBio] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [roastHistory, setRoastHistory] = useState<string[]>([]);
   const { checkInterstitialAd } = useAdManager();
 
   const roastStyles = [
@@ -23,29 +29,70 @@ const RoastGenerator: React.FC = () => {
     { id: 'mild', name: 'Mild', emoji: '😊', description: 'Friendly roasting' }
   ];
 
-  const sampleRoasts = [
-    "Bro, gym toh gaya lagta hai, lekin photo sirf mirror se dosti karne aayi hai. 📸💪",
-    "Beta, ye filter itna heavy hai ki mera phone hang ho gaya seeing your pic! 😂📱",
-    "Arey yaar, crypto bro ban ne se pehle confidence toh invest kar le! 💰😎",
-    "Profile dekh ke lagta hai, Netflix ki documentary mein feature hone wala hai - 'Catfish Chronicles' 🐟✨"
-  ];
-
   const generateRoast = async () => {
     setIsGenerating(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      const randomRoast = sampleRoasts[Math.floor(Math.random() * sampleRoasts.length)];
-      setCurrentRoast(randomRoast);
-      setIsGenerating(false);
+    try {
+      // Set API key if provided
+      if (apiKey) {
+        aiRoastService.setApiKey(apiKey);
+      }
+
+      const request: RoastRequest = {
+        style: selectedStyle,
+        userBio: userBio || undefined,
+        previousRoasts: roastHistory
+      };
+
+      const response = await aiRoastService.generateRoast(request);
+      
+      setCurrentRoast(response.roast);
+      setRoastHistory(prev => [...prev, response.roast]);
       
       // Trigger ad check after roast generation
       checkInterstitialAd();
-    }, 2000);
+    } catch (error) {
+      console.error('Roast generation failed:', error);
+      setCurrentRoast("AI got roasted by technical difficulties! Try again 😅");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
     <div className="space-y-6 mt-8">
+      {/* AI API Key Input */}
+      <Card className="bg-black/30 border border-green-500/30 p-4">
+        <h4 className="text-lg font-bold mb-2 text-green-400 flex items-center">
+          <Sparkles className="w-5 h-5 mr-2" />
+          AI Configuration (Optional)
+        </h4>
+        <Input
+          type="password"
+          placeholder="Enter OpenAI API Key for better results (optional)"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          className="bg-black/50 border-green-500/30 text-white placeholder-gray-400"
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          Leave empty to use demo mode. Get API key from OpenAI platform.
+        </p>
+      </Card>
+
+      {/* User Bio Input */}
+      <Card className="bg-black/30 border border-blue-500/30 p-4">
+        <h4 className="text-lg font-bold mb-2 text-blue-400">Tell us about yourself</h4>
+        <Input
+          placeholder="e.g., Gym freak, Crypto bro, Foodie, Student..."
+          value={userBio}
+          onChange={(e) => setUserBio(e.target.value)}
+          className="bg-black/50 border-blue-500/30 text-white placeholder-gray-400"
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          This helps AI generate more personalized roasts!
+        </p>
+      </Card>
+
       {/* Roast Style Selector */}
       <Card className="bg-black/30 border border-pink-500/30 p-6">
         <h3 className="text-xl font-bold mb-4 text-orange-400 flex items-center">
@@ -145,6 +192,18 @@ const RoastGenerator: React.FC = () => {
           onShare={() => console.log('Sharing roast...')}
           onDownload={() => console.log('Downloading roast...')}
         />
+      )}
+
+      {/* Roast History Summary */}
+      {roastHistory.length > 0 && (
+        <Card className="bg-black/20 border border-purple-500/30 p-4">
+          <h4 className="text-lg font-bold text-purple-400 mb-2">
+            🔥 Generated {roastHistory.length} unique roasts this session!
+          </h4>
+          <p className="text-sm text-gray-400">
+            AI is learning your style to avoid repetition.
+          </p>
+        </Card>
       )}
     </div>
   );
