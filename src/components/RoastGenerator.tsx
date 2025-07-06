@@ -1,15 +1,16 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Flame, Share, Download, Settings } from "lucide-react";
 import RoastCard from "./RoastCard";
+import { useAdManager } from "@/hooks/useAdManager";
 
 const RoastGenerator: React.FC = () => {
   const [selectedStyle, setSelectedStyle] = useState('classic');
   const [currentRoast, setCurrentRoast] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const { checkInterstitialAd } = useAdManager();
 
   const roastStyles = [
     { id: 'classic', name: 'Classic', emoji: '😏', description: 'Traditional savage roasts' },
@@ -37,6 +38,9 @@ const RoastGenerator: React.FC = () => {
       const randomRoast = sampleRoasts[Math.floor(Math.random() * sampleRoasts.length)];
       setCurrentRoast(randomRoast);
       setIsGenerating(false);
+      
+      // Trigger ad check after roast generation
+      checkInterstitialAd();
     }, 2000);
   };
 

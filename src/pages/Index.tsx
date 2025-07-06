@@ -3,17 +3,24 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Flame, Upload, Users, Camera, Settings, Star } from "lucide-react";
+import { Flame, Upload, Users, Camera, Settings, Star, User } from "lucide-react";
 import UploadSection from "@/components/UploadSection";
 import RoastGenerator from "@/components/RoastGenerator";
 import RoastHistory from "@/components/RoastHistory";
 import AuthModal from "@/components/AuthModal";
+import BannerAd from "@/components/ads/BannerAd";
+import InterstitialAd from "@/components/ads/InterstitialAd";
+import NativeAd from "@/components/ads/NativeAd";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdManager } from "@/hooks/useAdManager";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("roast");
   const [showAuth, setShowAuth] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const { showInterstitial, closeInterstitial } = useAdManager();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-orange-900 text-white">
@@ -31,13 +38,30 @@ const Index = () => {
               AI Profile Roaster
             </h1>
           </div>
-          <Button 
-            onClick={() => setShowAuth(true)}
-            className="bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-semibold"
-          >
-            {isAuthenticated ? `Hi ${user?.name}!` : "Login"}
-          </Button>
+          <div className="flex items-center gap-3">
+            {isAuthenticated && (
+              <Button 
+                onClick={() => navigate('/dashboard')}
+                variant="outline"
+                className="border-blue-500/30 text-blue-300 hover:bg-blue-500/10"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Dashboard
+              </Button>
+            )}
+            <Button 
+              onClick={() => setShowAuth(true)}
+              className="bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-semibold"
+            >
+              {isAuthenticated ? `Hi ${user?.name}!` : "Login"}
+            </Button>
+          </div>
         </div>
+      </div>
+
+      {/* Top Banner Ad */}
+      <div className="container mx-auto px-4">
+        <BannerAd position="top" closeable={true} />
       </div>
 
       {/* Main Content */}
@@ -87,6 +111,11 @@ const Index = () => {
               <UploadSection />
               <RoastGenerator />
             </Card>
+            
+            {/* Native Ad between content */}
+            <div className="mt-6">
+              <NativeAd />
+            </div>
           </TabsContent>
 
           <TabsContent value="friend" className="mt-8">
@@ -114,10 +143,19 @@ const Index = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Bottom Banner Ad */}
+        <BannerAd position="bottom" />
       </div>
 
       {/* Auth Modal */}
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      
+      {/* Interstitial Ad */}
+      <InterstitialAd 
+        isVisible={showInterstitial}
+        onClose={closeInterstitial}
+      />
     </div>
   );
 };
